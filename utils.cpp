@@ -1,6 +1,15 @@
 #include "utils.h"
 #include <cmath>
 
+double* util::alloc(int dim_1)
+{
+    double *data = new double[dim_1];
+    for (int i = 0; i < dim_1; ++i) {
+        data[i] = 0.0;
+    }
+    return data;
+}
+
 double** util::alloc(int dim_1, int dim_2)
 {
     double **data = new double*[dim_1];
@@ -31,6 +40,12 @@ double**** util::alloc(int dim_1, int dim_2, int dim_3, int dim_4)
     return data;
 }
 
+void util::free(double *data)
+{
+    delete[] data;
+    data = NULL;
+}
+
 void util::free(double **data, int dim_1)
 {
     for (int i = 0; i < dim_1; ++i) {
@@ -55,6 +70,15 @@ void util::free(double ****data, int dim_1, int dim_2, int dim_3)
     data = NULL;
 }
 
+void util::transpose(double const * const *src, double **dst, int rows, int cols)
+{
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            dst[j][i] = src[i][j];
+        }
+    }
+}
+
 void util::dot(double const * const *lhs, double const * const *rhs, double **dst,
                int lhs_rows, int lhs_cols, int rhs_rows, int rhs_cols)
 {
@@ -64,16 +88,6 @@ void util::dot(double const * const *lhs, double const * const *rhs, double **ds
             for (int k = 0; k < lhs_cols; ++k) {
                 dst[i][j] += lhs[i][k] * rhs[k][j];
             }
-        }
-    }
-}
-
-void util::add(double const * const *lhs, const double *rhs, double **dst,
-               int lhs_rows, int lhs_cols)
-{
-    for (int i = 0; i < lhs_rows; ++i) {
-        for (int j = 0; j < lhs_cols; ++j) {
-            dst[i][j] = lhs[i][j] * rhs[j];
         }
     }
 }
@@ -130,7 +144,7 @@ void util::col2im(double const * const *src, double ****dst,
                             int dst_x = x + u;
 
                             if (0 <= dst_y && dst_y < height && 0 <= dst_x && dst_x < width) {
-                                dst[n][c][dst_y][dst_x] = src[src_y][src_x];
+                                dst[n][c][dst_y][dst_x] += src[src_y][src_x];
                             }
                         }
                     }
