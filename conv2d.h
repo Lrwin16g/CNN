@@ -15,6 +15,9 @@ public:
     void backward(double const * const * const * const *dout, double ****dx);
 
 private:
+    void im2col(double const * const * const * const *src, double **dst);
+    void col2im(double const * const *src, double ****dst);
+    
     int batch_size_;
     int channel_;
     int height_;
