@@ -5,13 +5,10 @@ Linear::Linear(int batch_size, int input_size, int output_size,
                int channel, int height, int width)
     : batch_size_(batch_size), input_size_(input_size), output_size_(output_size),
       channel_(channel), height_(height), width_(width),
-      input_T_(NULL), weight_T_(NULL), d_weight_(NULL), d_bias_(NULL),
-      input_col_(NULL), dx_col_(NULL)
+      input_T_(NULL), weight_T_(NULL), input_col_(NULL), dx_col_(NULL)
 {
     input_T_ = util::alloc<double>(input_size_, batch_size_);
     weight_T_ = util::alloc<double>(output_size_, input_size_);
-    d_weight_ = util::alloc<double>(input_size_, output_size_);
-    d_bias_ = util::alloc<double>(output_size_);
 
     if (channel_ != 0 && height_ != 0 && width_ != 0) {
         input_col_ = util::alloc<double>(batch_size_, channel_ * height_ * width_);
@@ -23,8 +20,6 @@ Linear::~Linear()
 {
     util::free(input_T_, input_size_);
     util::free(weight_T_, output_size_);
-    util::free(d_weight_, input_size_);
-    util::free(d_bias_);
 
     if (channel_ != 0 && height_ != 0 && width_ != 0) {
         util::free(input_col_, batch_size_);
@@ -80,9 +75,10 @@ void Linear::forward(double const * const *input, double const * const *weight,
     }
 }
 
-void Linear::backward(double const * const *dout, double ****dx)
+void Linear::backward(double const * const *dout, double **d_weight,
+                      double *d_bias, double ****dx)
 {
-    backward(dout, dx_col_);
+    backward(dout, d_weight, d_bias, dx_col_);
 
     for (int n = 0; n < batch_size_; ++n) {
         for (int c = 0; c < channel_; ++c) {
@@ -96,21 +92,22 @@ void Linear::backward(double const * const *dout, double ****dx)
     }
 }
 
-void Linear::backward(double const * const *dout, double **dx)
+void Linear::backward(double const * const *dout, double **d_weight,
+                      double *d_bias, double **dx)
 {
     // 誤差逆伝播
     util::dot(dout, weight_T_, dx, batch_size_, output_size_,
               output_size_, input_size_);
 
     // 重みの勾配の計算
-    util::dot(input_T_, dout, d_weight_, input_size_, batch_size_,
+    util::dot(input_T_, dout, d_weight, input_size_, batch_size_,
               batch_size_, output_size_);
 
     // バイアスの勾配の計算
     for (int i = 0; i < output_size_; ++i) {
-        d_bias_[i] = 0.0;
+        d_bias[i] = 0.0;
         for (int j = 0; j < batch_size_; ++j) {
-            d_bias_[i] += dout[j][i];
+            d_bias[i] += dout[j][i];
         }
     }
 }

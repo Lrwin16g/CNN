@@ -1,6 +1,8 @@
 #include "simple_convnet.h"
 #include "utils.h"
 
+#include <iostream>
+
 SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
                              int filter_num, int filter_h, int filter_w, int stride, int pad,
                              int hidden_size, int category_num, double weight_init_std)
@@ -11,7 +13,7 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
       pool_output_h_(0), pool_output_w_(0), pool_output_size_(0),
       layer1_(NULL), layer2_(NULL), layer3_(NULL), layer4_(NULL), layer5_(NULL), layer6_(NULL),
       last_layer_(NULL), weight2d_(NULL), weight_(NULL), bias_(NULL), x2d_(NULL), x_(NULL),
-      output_(NULL), dout_(NULL), dout2d_(NULL)
+      output_(NULL), dout_(NULL), dout2d_(NULL), d_weight2d_(NULL), d_weight_(NULL), d_bias_(NULL)
 {
     // ネットワークの初期化
     // Conv2d
@@ -74,6 +76,18 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
     bias_[1] = util::alloc<double>(hidden_size_);
     bias_[2] = util::alloc<double>(category_num_);
 
+    // 重みの勾配
+    d_weight2d_ = util::alloc<double>(filter_num_, channel_, filter_h_, filter_w_);
+    d_weight_ = new double**[2];
+    d_weight_[0] = util::alloc<double>(hidden_size_, category_num_);
+    d_weight_[1] = util::alloc<double>(pool_output_size_, hidden_size_);
+
+    // バイアスの勾配
+    d_bias_ = new double*[3];
+    d_bias_[0] = util::alloc<double>(category_num_);
+    d_bias_[1] = util::alloc<double>(hidden_size_);
+    d_bias_[2] = util::alloc<double>(filter_num_);
+
     // 中間ユニットの初期化
     x2d_ = new double****[3];
     x2d_[0] = util::alloc<double>(batch_size_, filter_num_, conv_output_h_, conv_output_w_);
@@ -114,6 +128,13 @@ SimpleConvNet::~SimpleConvNet()
     delete[] weight_;
 
     util::free(bias_, 3);
+
+    util::free(d_weight2d_, filter_num_, channel_, filter_h_);
+    util::free(d_weight_[0], hidden_size_);
+    util::free(d_weight_[1], pool_output_size_);
+    delete[] d_weight_;
+
+    util::free(d_bias_, 3);
 
     util::free(x2d_[0], batch_size_, filter_num_, conv_output_h_);
     util::free(x2d_[1], batch_size_, filter_num_, conv_output_h_);
@@ -173,15 +194,15 @@ void SimpleConvNet::gradient(double const * const * const * const *input,
     // backward
     last_layer_->backward(criterion, dout_[0]);
     // Linear
-    layer6_->backward(dout_[0], dout_[1]);
+    layer6_->backward(dout_[0], d_weight_[0], d_bias_[0], dout_[1]);
     // ReLU
     layer5_->backward(dout_[1], dout_[2]);
     // Linear
-    layer4_->backward(dout_[2], dout2d_[0]);
+    layer4_->backward(dout_[2], d_weight_[1], d_bias_[1], dout2d_[0]);
     // MaxPool2d
     layer3_->backward(dout2d_[0], dout2d_[1]);
     // ReLU
     layer2_->backward(dout2d_[1], dout2d_[2]);
     // Conv2d
-    layer1_->backward(dout2d_[2], dout2d_[3]);
+    layer1_->backward(dout2d_[2], d_weight2d_, d_bias_[2], dout2d_[3]);
 }

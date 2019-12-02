@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < batch_size; ++i) {
         for (int j = 0; j < category_num; ++j) {
-            std::cout << output[i][j] << ", ";
+            //std::cout << output[i][j] << ", ";
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
 
     //double loss = net.loss(input, criterion);

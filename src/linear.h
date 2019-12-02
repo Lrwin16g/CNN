@@ -13,8 +13,10 @@ public:
                  double **output);
     void forward(double const * const *input, double const * const *weight,
                  const double *bias, double **output);
-    void backward(double const * const *dout, double ****dx);
-    void backward(double const * const *dout, double **dx);
+    void backward(double const * const *dout, double **d_weight,
+                  double *d_bias, double ****dx);
+    void backward(double const * const *dout, double **d_weight,
+                  double *d_bias, double **dx);
 
 private:
     int batch_size_;
@@ -26,8 +28,6 @@ private:
 
     double **input_T_;
     double **weight_T_;
-    double **d_weight_;
-    double *d_bias_;
     double **input_col_;
     double **dx_col_;
 };

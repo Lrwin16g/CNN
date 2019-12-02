@@ -10,7 +10,7 @@ Conv2d::Conv2d(int batch_size, int channel, int height, int width,
       tmp_col_h_(0), tmp_col_w_(0), output_col_h_(0), output_col_w_(0),
       input_col_(NULL), input_col_T_(NULL), dx_col_(NULL), weight_col_(NULL),
       weight_col_T_(NULL), tmp_col_(NULL), output_col_(NULL), dout_col_(NULL),
-      d_weight_(NULL), d_bias_(NULL), d_weight_col_(NULL)
+      d_weight_col_(NULL)
 {
     // 出力画像の縦横サイズ
     output_h_ = (height_ + 2 * pad_ - filter_h_) / stride_ + 1;
@@ -40,10 +40,6 @@ Conv2d::Conv2d(int batch_size, int channel, int height, int width,
     output_col_ = util::alloc<double>(output_col_h_, output_col_w_);
     dout_col_ = util::alloc<double>(output_col_h_, output_col_w_);
 
-    // 重み・バイアスの勾配
-    d_weight_ = util::alloc<double>(filter_num_, channel_, filter_h_, filter_w_);
-    d_bias_ = util::alloc<double>(filter_num_);
-
     // 重みの勾配の行列形式
     d_weight_col_ = util::alloc<double>(weight_col_h_, weight_col_w_);
 }
@@ -58,8 +54,6 @@ Conv2d::~Conv2d()
     util::free(tmp_col_, tmp_col_h_);
     util::free(output_col_, output_col_h_);
     util::free(dout_col_, output_col_h_);
-    util::free(d_weight_, filter_num_, channel_, filter_h_);
-    util::free(d_bias_);
     util::free(d_weight_col_, weight_col_h_);
 }
 
@@ -107,7 +101,8 @@ void Conv2d::forward(double const * const * const * const *input,
     }
 }
 
-void Conv2d::backward(double const * const * const * const *dout, double ****dx)
+void Conv2d::backward(double const * const * const * const *dout, double ****d_weight,
+                      double *d_bias, double ****dx)
 {
     // 入力を2次元配列に展開
     for (int n = 0; n < batch_size_; ++n) {
@@ -123,12 +118,12 @@ void Conv2d::backward(double const * const * const * const *dout, double ****dx)
 
     // バイアスの勾配を計算
     for (int c = 0; c < filter_num_; ++c) {
-        d_bias_[c] = 0.0;
+        d_bias[c] = 0.0;
         for (int n = 0; n < batch_size_; ++n) {
             for (int y = 0; y < output_h_; ++y) {
                 for (int x = 0; x < output_w_; ++x) {
                     int idx_y = n * (output_h_ * output_w_) + y * output_w_ + x;
-                    d_bias_[c] += dout_col_[idx_y][c];
+                    d_bias[c] += dout_col_[idx_y][c];
                 }
             }
         }
@@ -147,7 +142,7 @@ void Conv2d::backward(double const * const * const * const *dout, double ****dx)
             for (int y = 0; y < filter_h_; ++y) {
                 for (int x = 0; x < filter_w_; ++x) {
                     int idx_y = c * (filter_h_ * filter_w_) + y * filter_w_ + x;
-                    d_weight_[n][c][y][x] = d_weight_col_[idx_y][n];
+                    d_weight[n][c][y][x] = d_weight_col_[idx_y][n];
                 }
             }
         }

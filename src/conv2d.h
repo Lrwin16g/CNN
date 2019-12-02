@@ -12,7 +12,8 @@ public:
                  double const * const * const * const *weight,
                  const double *bias,
                  double ****output);
-    void backward(double const * const * const * const *dout, double ****dx);
+    void backward(double const * const * const * const *dout, double ****d_weight,
+                  double *d_bias, double ****dx);
 
 private:
     void im2col(double const * const * const * const *src, double **dst);
@@ -46,8 +47,6 @@ private:
     double **tmp_col_;
     double **output_col_;
     double **dout_col_;
-    double ****d_weight_;
-    double *d_bias_;
     double **d_weight_col_;
 };
 

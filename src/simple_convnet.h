@@ -54,6 +54,10 @@ private:
     double ***weight_;
     double **bias_;
 
+    double ****d_weight2d_;
+    double ***d_weight_;
+    double **d_bias_;
+
     double *****x2d_;
     double ***x_;
     double **output_;
