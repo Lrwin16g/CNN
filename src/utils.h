@@ -2,17 +2,10 @@
 #define _UTILS_H_
 
 #include <cmath>
+#include <cstdlib>
 
 namespace util
 {
-    /*double* alloc(int dim_1);
-    double** alloc(int dim_1, int dim_2);
-    double**** alloc(int dim_1, int dim_2, int dim_3, int dim_4);
-
-    void free(double *data);
-    void free(double **data, int dim_1);
-    void free(double ****data, int dim_1, int dim_2, int dim_3);*/
-
     template<typename Type>
     Type* alloc(int dim_1)
     {
@@ -86,6 +79,26 @@ namespace util
         }
         delete[] data;
         data = NULL;
+    }
+
+    template<typename Type>
+    Type randu()
+    {
+        return (static_cast<Type>(rand()) + 1.0) / (static_cast<Type>(RAND_MAX) + 2.0);
+    }
+
+    template<typename Type>
+    Type randu(Type min, Type max)
+    {
+        Type z = static_cast<Type>(rand()) / static_cast<Type>(RAND_MAX) * (max - min);
+        return z + min;
+    }
+
+    template<typename Type>
+    Type randn(Type mean = 0.0, Type stddev = 1.0)
+    {
+        Type z = sqrt(-2.0 * log(randu<Type>())) * sin(2.0 * M_PI * randu<Type>());
+        return mean + stddev * z;
     }
 
     void transpose(double const * const *src, double **dst, int rows, int cols);

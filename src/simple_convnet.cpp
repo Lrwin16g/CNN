@@ -11,7 +11,7 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
       pool_output_h_(0), pool_output_w_(0), pool_output_size_(0),
       layer1_(NULL), layer2_(NULL), layer3_(NULL), layer4_(NULL), layer5_(NULL), layer6_(NULL),
       last_layer_(NULL), weight2d_(NULL), weight_(NULL), bias_(NULL), x2d_(NULL), x_(NULL),
-      output_(NULL)
+      output_(NULL), dout_(NULL), dout2d_(NULL)
 {
     // ネットワークの初期化
     // Conv2d
@@ -46,6 +46,28 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
     weight_[0] = util::alloc<double>(pool_output_size_, hidden_size_);
     weight_[1] = util::alloc<double>(hidden_size_, category_num_);
 
+    for (int i = 0; i < filter_num_; ++i) {
+        for (int j = 0; j < channel_; ++j) {
+            for (int k = 0; k < filter_h_; ++k) {
+                for (int l = 0; l < filter_w_; ++l) {
+                    weight2d_[i][j][k][l] = weight_init_std_ * util::randn<double>();
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < pool_output_size_; ++i) {
+        for (int j = 0; j < hidden_size_; ++j) {
+            weight_[0][i][j] = weight_init_std_ * util::randn<double>();
+        }
+    }
+
+    for (int i = 0; i < hidden_size_; ++i) {
+        for (int j = 0; j < category_num_; ++j) {
+            weight_[1][i][j] = weight_init_std_ * util::randn<double>();
+        }
+    }
+
     // バイアスの初期化
     bias_ = new double*[3];
     bias_[0] = util::alloc<double>(filter_num_);
@@ -63,6 +85,17 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
     x_[1] = util::alloc<double>(batch_size_, hidden_size_);
 
     output_ = util::alloc<double>(batch_size_, category_num_);
+
+    dout2d_ = new double****[4];
+    dout2d_[0] = util::alloc<double>(batch_size_, filter_num_, pool_output_h_, pool_output_w_);
+    dout2d_[1] = util::alloc<double>(batch_size_, filter_num_, conv_output_h_, conv_output_w_);
+    dout2d_[2] = util::alloc<double>(batch_size_, filter_num_, conv_output_h_, conv_output_w_);
+    dout2d_[3] = util::alloc<double>(batch_size_, channel_, height_, width_);
+
+    dout_ = new double**[3];
+    dout_[0] = util::alloc<double>(batch_size_, category_num_);
+    dout_[1] = util::alloc<double>(batch_size_, hidden_size_);
+    dout_[2] = util::alloc<double>(batch_size_, hidden_size_);
 }
 
 SimpleConvNet::~SimpleConvNet()
@@ -92,9 +125,20 @@ SimpleConvNet::~SimpleConvNet()
     delete[] x_;
 
     util::free(output_, batch_size_);
+
+    util::free(dout2d_[0], batch_size_, filter_num_, pool_output_h_);
+    util::free(dout2d_[1], batch_size_, filter_num_, conv_output_h_);
+    util::free(dout2d_[2], batch_size_, filter_num_, conv_output_h_);
+    util::free(dout2d_[3], batch_size_, channel_, height_);
+    delete[] dout2d_;
+
+    util::free(dout_[0], batch_size_);
+    util::free(dout_[1], batch_size_);
+    util::free(dout_[2], batch_size_);
+    delete[] dout_;
 }
 
-void SimpleConvNet::forward(double const * const * const * const *input,
+void SimpleConvNet::predict(double const * const * const * const *input,
                             double **output)
 {
     // Conv2d
@@ -114,9 +158,30 @@ void SimpleConvNet::forward(double const * const * const * const *input,
 double SimpleConvNet::loss(double const * const * const * const *input,
                            double const * const *criterion)
 {
-    forward(input, output_);
+    predict(input, output_);
 
     // Softmax With Cross Entropy
     return last_layer_->forward(output_, criterion);
 }
 
+void SimpleConvNet::gradient(double const * const * const * const *input,
+                             double const * const *criterion)
+{
+    // forward
+    loss(input, criterion);
+
+    // backward
+    last_layer_->backward(criterion, dout_[0]);
+    // Linear
+    layer6_->backward(dout_[0], dout_[1]);
+    // ReLU
+    layer5_->backward(dout_[1], dout_[2]);
+    // Linear
+    layer4_->backward(dout_[2], dout2d_[0]);
+    // MaxPool2d
+    layer3_->backward(dout2d_[0], dout2d_[1]);
+    // ReLU
+    layer2_->backward(dout2d_[1], dout2d_[2]);
+    // Conv2d
+    layer1_->backward(dout2d_[2], dout2d_[3]);
+}

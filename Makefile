@@ -2,8 +2,8 @@
 
 CC = g++
 CFLAGS = -O
-INCPATH += `pkg-config --cflags opencv`
-LIBS += `pkg-config --libs opencv`
+#INCPATH += `pkg-config --cflags opencv`
+#LIBS += `pkg-config --libs opencv`
 
 EXEDIR = ./bin
 OBJDIR = ./obj
@@ -16,7 +16,7 @@ OBJ1 = $(OBJDIR)/test_simple_convnet.o $(OBJDIR)/simple_convnet.o $(OBJDIR)/conv
 all: $(TARGET1)
 
 $(TARGET1): $(OBJ1)
-	$(CC) $(LIBS) -o $(TARGET1) $^
+	$(CC) $(CFLAGS) $(LIBS) -o $(TARGET1) $^
 
 $(OBJDIR)/test_simple_convnet.o: $(SRCDIR)/test_simple_convnet.cpp
 	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@

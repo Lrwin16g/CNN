@@ -15,8 +15,9 @@ public:
                   int hidden_size, int category_num, double weight_init_std);
     ~SimpleConvNet();
 
-    void forward(double const * const * const * const *input, double **output);
+    void predict(double const * const * const * const *input, double **output);
     double loss(double const * const * const * const *input, double const * const *criterion);
+    void gradient(double const * const * const * const *input, double const * const *criterion);
 
 private:
     int batch_size_;
@@ -56,6 +57,9 @@ private:
     double *****x2d_;
     double ***x_;
     double **output_;
+
+    double *****dout2d_;
+    double ***dout_;
 };
 
 #endif
