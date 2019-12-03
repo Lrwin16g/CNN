@@ -11,7 +11,9 @@ SRCDIR = ./src
 
 TARGET1 = test_simple_convnet
 
-OBJ1 = $(OBJDIR)/test_simple_convnet.o $(OBJDIR)/simple_convnet.o $(OBJDIR)/conv2d.o $(OBJDIR)/maxpool2d.o $(OBJDIR)/relu.o $(OBJDIR)/linear.o $(OBJDIR)/softmax.o $(OBJDIR)/utils.o
+OBJ1 = $(OBJDIR)/test_simple_convnet.o $(OBJDIR)/simple_convnet.o $(OBJDIR)/conv2d.o \
+	   $(OBJDIR)/maxpool2d.o $(OBJDIR)/relu.o $(OBJDIR)/linear.o $(OBJDIR)/softmax.o \
+	   $(OBJDIR)/optimizer.o $(OBJDIR)/utils.o
 
 all: $(TARGET1)
 
@@ -37,6 +39,9 @@ $(OBJDIR)/linear.o: $(SRCDIR)/linear.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/softmax.o: $(SRCDIR)/softmax.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/optimizer.o: $(SRCDIR)/optimizer.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp

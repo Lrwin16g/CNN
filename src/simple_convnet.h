@@ -6,6 +6,7 @@
 #include "maxpool2d.h"
 #include "linear.h"
 #include "softmax.h"
+#include "optimizer.h"
 
 class SimpleConvNet
 {
@@ -18,7 +19,8 @@ public:
     void predict(double const * const * const * const *input, double **output);
     double loss(double const * const * const * const *input, double const * const *criterion);
     void gradient(double const * const * const * const *input, double const * const *criterion);
-
+    void update(double lr);
+    
 private:
     int batch_size_;
     int channel_;
@@ -49,6 +51,7 @@ private:
     ReLU *layer5_;
     Linear *layer6_;
     SoftmaxWithLoss *last_layer_;
+    SGD *optim_;
 
     double ****weight2d_;
     double ***weight_;

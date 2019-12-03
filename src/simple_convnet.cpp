@@ -13,7 +13,8 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
       pool_output_h_(0), pool_output_w_(0), pool_output_size_(0),
       layer1_(NULL), layer2_(NULL), layer3_(NULL), layer4_(NULL), layer5_(NULL), layer6_(NULL),
       last_layer_(NULL), weight2d_(NULL), weight_(NULL), bias_(NULL), x2d_(NULL), x_(NULL),
-      output_(NULL), dout_(NULL), dout2d_(NULL), d_weight2d_(NULL), d_weight_(NULL), d_bias_(NULL)
+      output_(NULL), dout_(NULL), dout2d_(NULL), d_weight2d_(NULL), d_weight_(NULL), d_bias_(NULL),
+      optim_(NULL)
 {
     // ネットワークの初期化
     // Conv2d
@@ -41,6 +42,8 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
     layer6_ = new Linear(batch_size_, hidden_size_, category_num_);
     // Softmax
     last_layer_ = new SoftmaxWithLoss(batch_size_, category_num_);
+
+    optim_ = new SGD();
 
     // 重みの初期化
     weight2d_ = util::alloc<double>(filter_num_, channel_, filter_h_, filter_w_);
@@ -121,6 +124,7 @@ SimpleConvNet::~SimpleConvNet()
     delete layer5_;
     delete layer6_;
     delete last_layer_;
+    delete optim_;
 
     util::free(weight2d_, filter_num_, channel_, filter_h_);
     util::free(weight_[0], pool_output_size_);
@@ -185,11 +189,13 @@ double SimpleConvNet::loss(double const * const * const * const *input,
     return last_layer_->forward(output_, criterion);
 }
 
+double SimpleConvNet::accuracy()
+
 void SimpleConvNet::gradient(double const * const * const * const *input,
                              double const * const *criterion)
 {
     // forward
-    loss(input, criterion);
+    //loss(input, criterion);
 
     // backward
     last_layer_->backward(criterion, dout_[0]);
@@ -205,4 +211,16 @@ void SimpleConvNet::gradient(double const * const * const * const *input,
     layer2_->backward(dout2d_[1], dout2d_[2]);
     // Conv2d
     layer1_->backward(dout2d_[2], d_weight2d_, d_bias_[2], dout2d_[3]);
+}
+
+void SimpleConvNet::update(double lr)
+{
+    optim_->update(weight2d_, d_weight2d_, lr, filter_num_, channel_, filter_h_, filter_w_);
+    optim_->update(bias_[0], d_bias_[2], lr, filter_num_);
+
+    optim_->update(weight_[0], d_weight_[1], lr, pool_output_size_, hidden_size_);
+    optim_->update(bias_[1], d_bias_[1], lr, hidden_size_);
+
+    optim_->update(weight_[1], d_weight_[0], lr, hidden_size_, category_num_);
+    optim_->update(bias_[2], d_bias_[0], lr, category_num_);
 }
