@@ -13,14 +13,15 @@ class SimpleConvNet
 public:
     SimpleConvNet(int batch_size, int channel, int height, int width,
                   int filter_num, int filter_h, int filter_w, int stride, int pad,
-                  int hidden_size, int category_num, double weight_init_std);
+                  int hidden_size, int category_num, double weight_init_std,
+                  double lr);
     ~SimpleConvNet();
 
     void predict(double const * const * const * const *input, double **output);
     double loss(double const * const * const * const *input, double const * const *criterion);
     void gradient(double const * const * const * const *input, double const * const *criterion);
-    void update(double lr);
-    
+    void update();
+
 private:
     int batch_size_;
     int channel_;
@@ -51,7 +52,8 @@ private:
     ReLU *layer5_;
     Linear *layer6_;
     SoftmaxWithLoss *last_layer_;
-    SGD *optim_;
+    //SGD *optim_;
+    Adam **optim_;
 
     double ****weight2d_;
     double ***weight_;

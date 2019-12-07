@@ -5,7 +5,8 @@
 
 SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
                              int filter_num, int filter_h, int filter_w, int stride, int pad,
-                             int hidden_size, int category_num, double weight_init_std)
+                             int hidden_size, int category_num, double weight_init_std,
+                             double lr)
     : batch_size_(batch_size), channel_(channel), height_(height), width_(width),
       filter_num_(filter_num), filter_h_(filter_h), filter_w_(filter_w), stride_(stride),
       pad_(pad), hidden_size_(hidden_size), category_num_(category_num), weight_init_std_(weight_init_std),
@@ -43,7 +44,14 @@ SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
     // Softmax
     last_layer_ = new SoftmaxWithLoss(batch_size_, category_num_);
 
-    optim_ = new SGD();
+    //optim_ = new SGD();
+    optim_ = new Adam*[6];
+    optim_[0] = new Adam(lr, 0.9, 0.999, filter_num_, channel_, filter_h_, filter_w_);
+    optim_[1] = new Adam(lr, 0.9, 0.999, filter_num_, 0, 0, 0);
+    optim_[2] = new Adam(lr, 0.9, 0.999, pool_output_size_, hidden_size_, 0, 0);
+    optim_[3] = new Adam(lr, 0.9, 0.999, hidden_size_, 0, 0, 0);
+    optim_[4] = new Adam(lr, 0.9, 0.999, hidden_size_, category_num_, 0, 0);
+    optim_[5] = new Adam(lr, 0.9, 0.999, category_num_, 0, 0, 0);
 
     // 重みの初期化
     weight2d_ = util::alloc<double>(filter_num_, channel_, filter_h_, filter_w_);
@@ -124,7 +132,11 @@ SimpleConvNet::~SimpleConvNet()
     delete layer5_;
     delete layer6_;
     delete last_layer_;
-    delete optim_;
+
+    for (int i = 0; i < 6; ++i) {
+        delete optim_[i];
+    }
+    delete[] optim_;
 
     util::free(weight2d_, filter_num_, channel_, filter_h_);
     util::free(weight_[0], pool_output_size_);
@@ -189,8 +201,6 @@ double SimpleConvNet::loss(double const * const * const * const *input,
     return last_layer_->forward(output_, criterion);
 }
 
-double SimpleConvNet::accuracy()
-
 void SimpleConvNet::gradient(double const * const * const * const *input,
                              double const * const *criterion)
 {
@@ -213,14 +223,21 @@ void SimpleConvNet::gradient(double const * const * const * const *input,
     layer1_->backward(dout2d_[2], d_weight2d_, d_bias_[2], dout2d_[3]);
 }
 
-void SimpleConvNet::update(double lr)
+void SimpleConvNet::update()
 {
-    optim_->update(weight2d_, d_weight2d_, lr, filter_num_, channel_, filter_h_, filter_w_);
+    /*optim_->update(weight2d_, d_weight2d_, lr, filter_num_, channel_, filter_h_, filter_w_);
     optim_->update(bias_[0], d_bias_[2], lr, filter_num_);
 
     optim_->update(weight_[0], d_weight_[1], lr, pool_output_size_, hidden_size_);
     optim_->update(bias_[1], d_bias_[1], lr, hidden_size_);
 
     optim_->update(weight_[1], d_weight_[0], lr, hidden_size_, category_num_);
-    optim_->update(bias_[2], d_bias_[0], lr, category_num_);
+    optim_->update(bias_[2], d_bias_[0], lr, category_num_);*/
+
+    optim_[0]->update(weight2d_, d_weight2d_);
+    optim_[1]->update(bias_[0], d_bias_[2]);
+    optim_[2]->update(weight_[0], d_weight_[1]);
+    optim_[3]->update(bias_[1], d_bias_[1]);
+    optim_[4]->update(weight_[1], d_weight_[0]);
+    optim_[5]->update(bias_[2], d_bias_[0]);
 }
