@@ -1,46 +1,7 @@
-#include "optimizer.h"
+#include "adam.h"
 #include "utils.h"
 
 #include <cmath>
-
-SGD::SGD()
-{
-}
-
-SGD::~SGD()
-{
-}
-
-void SGD::update(double ****params, double const * const * const * const *grads,
-                 double lr, int dim_1, int dim_2, int dim_3, int dim_4)
-{
-    for (int i = 0; i < dim_1; ++i) {
-        for (int j = 0; j < dim_2; ++j) {
-            for (int k = 0; k < dim_3; ++k) {
-                for (int l = 0; l < dim_4; ++l) {
-                    params[i][j][k][l] -= lr * grads[i][j][k][l];
-                }
-            }
-        }
-    }
-}
-
-void SGD::update(double **params, double const * const *grads,
-                 double lr, int dim_1, int dim_2)
-{
-    for (int i = 0; i < dim_1; ++i) {
-        for (int j = 0; j < dim_2; ++j) {
-            params[i][j] -= lr * grads[i][j];
-        }
-    }
-}
-
-void SGD::update(double *params, const double *grads, double lr, int dim)
-{
-    for (int i = 0; i < dim; ++i) {
-        params[i] -= lr * grads[i];
-    }
-}
 
 Adam::Adam(double lr, double beta_1, double beta_2, int dim_1, int dim_2, int dim_3, int dim_4)
     : lr_(lr), beta_1_(beta_1), beta_2_(beta_2), iter_(0), dim_1_(dim_1), dim_2_(dim_2),

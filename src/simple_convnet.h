@@ -6,7 +6,7 @@
 #include "maxpool2d.h"
 #include "linear.h"
 #include "softmax.h"
-#include "optimizer.h"
+#include "adam.h"
 
 class SimpleConvNet
 {

@@ -1,8 +1,6 @@
 #include "simple_convnet.h"
 #include "utils.h"
 
-#include <iostream>
-
 SimpleConvNet::SimpleConvNet(int batch_size, int channel, int height, int width,
                              int filter_num, int filter_h, int filter_w, int stride, int pad,
                              int hidden_size, int category_num, double weight_init_std,
@@ -204,9 +202,6 @@ double SimpleConvNet::loss(double const * const * const * const *input,
 void SimpleConvNet::gradient(double const * const * const * const *input,
                              double const * const *criterion)
 {
-    // forward
-    //loss(input, criterion);
-
     // backward
     last_layer_->backward(criterion, dout_[0]);
     // Linear
@@ -225,15 +220,6 @@ void SimpleConvNet::gradient(double const * const * const * const *input,
 
 void SimpleConvNet::update()
 {
-    /*optim_->update(weight2d_, d_weight2d_, lr, filter_num_, channel_, filter_h_, filter_w_);
-    optim_->update(bias_[0], d_bias_[2], lr, filter_num_);
-
-    optim_->update(weight_[0], d_weight_[1], lr, pool_output_size_, hidden_size_);
-    optim_->update(bias_[1], d_bias_[1], lr, hidden_size_);
-
-    optim_->update(weight_[1], d_weight_[0], lr, hidden_size_, category_num_);
-    optim_->update(bias_[2], d_bias_[0], lr, category_num_);*/
-
     optim_[0]->update(weight2d_, d_weight2d_);
     optim_[1]->update(bias_[0], d_bias_[2]);
     optim_[2]->update(weight_[0], d_weight_[1]);

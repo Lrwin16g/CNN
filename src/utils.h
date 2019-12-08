@@ -101,6 +101,12 @@ namespace util
         return mean + stddev * z;
     }
 
+    template<typename Type>
+    Type sigmoid(Type x)
+    {
+        return 1.0 / (1.0 + exp(-x));
+    }
+
     void transpose(double const * const *src, double **dst, int rows, int cols);
 
     void dot(double const * const *lhs, double const * const *rhs, double **dst,
