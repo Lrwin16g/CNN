@@ -1,8 +1,6 @@
 #include "dropout.h"
 #include "utils.h"
 
-#include <iostream>
-
 Dropout::Dropout(int batch_size, int input_size, int channel, int height, int width,
                  double ratio)
     : batch_size_(batch_size), input_size_(input_size), channel_(channel),
@@ -50,7 +48,6 @@ void Dropout::forward(double const * const *input, double **output,
         for (int j = 0; j < input_size_; ++j) {
             if (train_flg) {
                 mask_[i][j] = (util::randu<double>(0.0, 1.0) > ratio_);
-                std::cout << util::randu<double>(0.0, 1.0) << ", " << mask_[i][j] << ", ";
                 output[i][j] = input[i][j] * static_cast<double>(mask_[i][j]);
             } else {
                 output[i][j] = input[i][j] * (1.0 - ratio_);

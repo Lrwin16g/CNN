@@ -4,7 +4,8 @@
 class Adam
 {
 public:
-    Adam(double lr, double beta_1, double beta_2, int dim_1, int dim_2, int dim_3, int dim_4);
+    Adam(double lr, double beta_1, double beta_2, int dim_1, int dim_2 = 0,
+         int dim_3 = 0, int dim_4 = 0);
     ~Adam();
     void update(double ****params, double const * const * const * const *grads);
     void update(double **params, double const * const *grads);

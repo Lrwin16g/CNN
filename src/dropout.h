@@ -4,8 +4,8 @@
 class Dropout
 {
 public:
-    Dropout(int batch_size, int input_size, int channel, int height, int width,
-            double ratio);
+    Dropout(int batch_size, int input_size, int channel = 0, int height = 0,
+            int width = 0, double ratio = 0.5);
     ~Dropout();
 
     void forward(double const * const * const * const *input,

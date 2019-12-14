@@ -21,8 +21,8 @@ private:
     int height_;
     int width_;
 
-    double **mask_;
-    double ****mask_2d_;
+    bool **mask_;
+    bool ****mask_2d_;
 };
 
 #endif

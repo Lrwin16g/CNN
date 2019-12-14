@@ -6,6 +6,21 @@
 
 namespace util
 {
+    struct ConvParam
+    {
+        int filter_num;
+        int filter_h;
+        int filter_w;
+        int stride;
+        int pad;
+
+        ConvParam(int fn, int fh, int fw, int st, int pd)
+            : filter_num(fn), filter_h(fh), filter_w(fw),
+              stride(st), pad(pd)
+        {
+        }
+    };
+
     template<typename Type>
     Type* alloc(int dim_1)
     {
@@ -24,6 +39,22 @@ namespace util
             data[i] = new Type[dim_2];
             for (int j = 0; j < dim_2; ++j) {
                 data[i][j] = 0.0;
+            }
+        }
+        return data;
+    }
+
+    template<typename Type>
+    Type*** alloc(int dim_1, int dim_2, int dim_3)
+    {
+        Type ***data = new Type**[dim_1];
+        for (int i = 0; i < dim_1; ++i) {
+            data[i] = new Type*[dim_2];
+            for (int j = 0; j < dim_2; ++j) {
+                data[i][j] = new Type[dim_3];
+                for (int k = 0; k < dim_3; ++k) {
+                    data[i][j][k] = 0.0;
+                }
             }
         }
         return data;
@@ -59,6 +90,19 @@ namespace util
     void free(Type **data, int dim_1)
     {
         for (int i = 0; i < dim_1; ++i) {
+            delete[] data[i];
+        }
+        delete[] data;
+        data = NULL;
+    }
+
+    template<typename Type>
+    void free(Type ***data, int dim_1, int dim_2)
+    {
+        for (int i = 0; i < dim_1; ++i) {
+            for (int j = 0; j < dim_2; ++j) {
+                delete[] data[i][j];
+            }
             delete[] data[i];
         }
         delete[] data;

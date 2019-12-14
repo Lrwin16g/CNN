@@ -5,10 +5,10 @@ ReLU::ReLU(int batch_size, int input_size, int channel, int height, int width)
     : batch_size_(batch_size), input_size_(input_size), channel_(channel), 
       height_(height), width_(width), mask_(NULL), mask_2d_(NULL)
 {
-    mask_ = util::alloc<double>(batch_size_, input_size_);
+    mask_ = util::alloc<bool>(batch_size_, input_size_);
 
     if (channel_ != 0 && height_ != 0 && width_ != 0) {
-        mask_2d_ = util::alloc<double>(batch_size_, channel_, height_, width_);
+        mask_2d_ = util::alloc<bool>(batch_size_, channel_, height_, width_);
     }
 }
 

@@ -9,21 +9,35 @@ EXEDIR = ./bin
 OBJDIR = ./obj
 SRCDIR = ./src
 
-TARGET1 = test_simple_convnet
+TARGET1 = train_convnet
+TARGET2 = train_deepnet
 
-OBJ1 = $(OBJDIR)/test_simple_convnet.o $(OBJDIR)/simple_convnet.o $(OBJDIR)/conv2d.o \
+OBJ1 = $(OBJDIR)/train_convnet.o $(OBJDIR)/simple_convnet.o $(OBJDIR)/conv2d.o \
 	   $(OBJDIR)/maxpool2d.o $(OBJDIR)/relu.o $(OBJDIR)/linear.o $(OBJDIR)/softmax.o \
 	   $(OBJDIR)/adam.o $(OBJDIR)/utils.o
 
-all: $(TARGET1)
+OBJ2 = $(OBJDIR)/train_deepnet.o $(OBJDIR)/deep_convnet.o $(OBJDIR)/conv2d.o \
+	   $(OBJDIR)/maxpool2d.o $(OBJDIR)/relu.o $(OBJDIR)/linear.o $(OBJDIR)/softmax.o \
+	   $(OBJDIR)/dropout.o $(OBJDIR)/adam.o $(OBJDIR)/utils.o
+
+all: $(TARGET1) $(TARGET2)
 
 $(TARGET1): $(OBJ1)
 	$(CC) $(CFLAGS) $(LIBS) -o $(TARGET1) $^
 
-$(OBJDIR)/test_simple_convnet.o: $(SRCDIR)/test_simple_convnet.cpp
+$(TARGET2): $(OBJ2)
+	$(CC) $(CFLAGS) $(LIBS) -o $(TARGET2) $^
+
+$(OBJDIR)/train_convnet.o: $(SRCDIR)/train_convnet.cpp
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+
+$(OBJDIR)/train_deepnet.o: $(SRCDIR)/train_deepnet.cpp
 	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 
 $(OBJDIR)/simple_convnet.o: $(SRCDIR)/simple_convnet.cpp
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+
+$(OBJDIR)/deep_convnet.o: $(SRCDIR)/deep_convnet.cpp
 	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 
 $(OBJDIR)/conv2d.o: $(SRCDIR)/conv2d.cpp
@@ -57,4 +71,4 @@ $(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TARGET1) $(OBJDIR)/*.o
+	rm -f $(TARGET1) $(TARGET2) $(OBJDIR)/*.o
