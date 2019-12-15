@@ -21,6 +21,7 @@ public:
                 double const * const *criterion);
     void gradient(double const * const *criterion);
     void update();
+    void setTrainFlg(bool flg) {train_flg_ = flg;}
 
 private:
     int batch_size_;

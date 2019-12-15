@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
         net.update();
 
         if (i % iter_per_epoch == 0) {
+            net.setTrainFlg(false);
             double train_acc = 0.0;
             double test_acc = 0.0;
             for (int j = 0; j < evaluate_sample_num_per_epoch / batch_size; ++j) {
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
             test_acc /= evaluate_sample_num_per_epoch;
             std::cout << "train_acc: " << train_acc << std::endl;
             std::cout << "test_acc: " << test_acc << std::endl;
+            net.setTrainFlg(true);
         }
     }
 
